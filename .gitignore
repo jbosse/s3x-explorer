@@ -1,0 +1,157 @@
+# VS Code Extension - .gitignore
+
+# Compiled JavaScript output
+out/
+dist/
+*.js
+*.js.map
+!.eslintrc.js
+!webpack.config.js
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# VS Code testing artifacts
+.vscode-test/
+.vscode-test-web/
+*.vsix
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Coverage reports and testing
+coverage/
+.nyc_output/
+test-results/
+*.lcov
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+keys.txt
+credentials.json
+secrets/
+*.key
+*.pem
+
+# Test files that contain real credentials or data
+test-r2-*.js
+test-extension-*.js
+test-extension-*.md
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE and editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Build and distribution
+build/
+lib/
+.webpack/
+
+# Package files
+*.tgz
+*.tar
+
+# ESLint cache
+.eslintcache
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# R2/S3 test artifacts
+*test-bucket*
+s3x-test-*
+
+# Editor backup files
+*~
+*.orig
+*.bak
+*.backup
+
+# Windows specific
+*.lnk
+
+# Linux specific
+*~
+
+# macOS specific
+.AppleDouble
+.LSOverride
+Icon 

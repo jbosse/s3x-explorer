@@ -1,0 +1,294 @@
+{
+  "name": "s3x-explorer",
+  "displayName": "S3/R2 Explorer",
+  "description": "Browse and manage S3-compatible storage (Cloudflare R2, AWS S3, MinIO) directly in VS Code",
+  "version": "1.0.0",
+  "publisher": "larsniet",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/larsniet/r2-bucket-extension.git"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "s3",
+    "r2",
+    "cloudflare",
+    "storage",
+    "aws",
+    "minio",
+    "bucket"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "S3/R2 Explorer",
+      "properties": {
+        "s3x.endpointUrl": {
+          "type": "string",
+          "default": "",
+          "description": "S3-compatible endpoint URL (e.g. https://<account>.<jurisdiction>.r2.cloudflarestorage.com)"
+        },
+        "s3x.region": {
+          "type": "string",
+          "default": "us-east-1",
+          "description": "Region string for SigV4 (R2 typically works with 'us-east-1')."
+        },
+        "s3x.accessKeyId": {
+          "type": "string",
+          "default": "",
+          "description": "Access Key ID"
+        },
+        "s3x.secretAccessKey": {
+          "type": "string",
+          "default": "",
+          "description": "Secret Access Key (stored in settings.json as requested)"
+        },
+        "s3x.forcePathStyle": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use path-style URLs (required for R2)."
+        },
+        "s3x.maxPreviewSizeBytes": {
+          "type": "number",
+          "default": 10485760,
+          "description": "Max object size (bytes) to open directly in editor."
+        }
+      }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "s3xExplorer",
+          "name": "S3/R2 Explorer",
+          "when": "config.s3x.endpointUrl != ''",
+          "icon": "$(cloud)",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "s3x.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "s3x.configure",
+        "title": "Configure S3/R2 Settings",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "s3x.configureWizard",
+        "title": "S3/R2 Setup Wizard",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "s3x.createFolder",
+        "title": "New Folder",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "s3x.uploadFile",
+        "title": "Upload File",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "s3x.uploadFolder",
+        "title": "Upload Folder",
+        "icon": "$(file-directory)"
+      },
+      {
+        "command": "s3x.download",
+        "title": "Download",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "s3x.rename",
+        "title": "Rename",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "s3x.delete",
+        "title": "Delete",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "s3x.copy",
+        "title": "Copy",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "s3x.move",
+        "title": "Move",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "s3x.presign",
+        "title": "Generate Presigned URL",
+        "icon": "$(link)"
+      },
+      {
+        "command": "s3x.search",
+        "title": "Search in Bucket",
+        "icon": "$(search)"
+      },
+      {
+        "command": "s3x.showMetadata",
+        "title": "Show Object Metadata",
+        "icon": "$(info)"
+      },
+      {
+        "command": "s3x.reauth",
+        "title": "Update Credentials",
+        "icon": "$(key)"
+      },
+      {
+        "command": "s3x.smokeTest",
+        "title": "Run Smoke Test",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "s3x.loadMore",
+        "title": "Load More...",
+        "icon": "$(ellipsis)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "s3x.refresh",
+          "when": "view == s3xExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "s3x.configure",
+          "when": "view == s3xExplorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "s3x.search",
+          "when": "view == s3xExplorer",
+          "group": "1_search"
+        },
+        {
+          "command": "s3x.smokeTest",
+          "when": "view == s3xExplorer",
+          "group": "z_test"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "s3x.refresh",
+          "when": "view == s3xExplorer",
+          "group": "1_refresh"
+        },
+        {
+          "command": "s3x.createFolder",
+          "when": "view == s3xExplorer && (viewItem == bucket || viewItem == prefix)",
+          "group": "2_new@1"
+        },
+        {
+          "command": "s3x.uploadFile",
+          "when": "view == s3xExplorer && (viewItem == bucket || viewItem == prefix)",
+          "group": "2_new@2"
+        },
+        {
+          "command": "s3x.uploadFolder",
+          "when": "view == s3xExplorer && (viewItem == bucket || viewItem == prefix)",
+          "group": "2_new@3"
+        },
+        {
+          "command": "s3x.download",
+          "when": "view == s3xExplorer && viewItem == object",
+          "group": "3_actions@1"
+        },
+        {
+          "command": "s3x.rename",
+          "when": "view == s3xExplorer && (viewItem == object || viewItem == prefix)",
+          "group": "3_actions@2"
+        },
+        {
+          "command": "s3x.copy",
+          "when": "view == s3xExplorer && viewItem == object",
+          "group": "3_actions@3"
+        },
+        {
+          "command": "s3x.move",
+          "when": "view == s3xExplorer && viewItem == object",
+          "group": "3_actions@4"
+        },
+        {
+          "command": "s3x.delete",
+          "when": "view == s3xExplorer && (viewItem == object || viewItem == prefix)",
+          "group": "4_delete"
+        },
+        {
+          "command": "s3x.presign",
+          "when": "view == s3xExplorer && viewItem == object",
+          "group": "5_url"
+        },
+        {
+          "command": "s3x.showMetadata",
+          "when": "view == s3xExplorer && viewItem == object",
+          "group": "6_info"
+        },
+        {
+          "command": "s3x.loadMore",
+          "when": "view == s3xExplorer && viewItem == loadMore",
+          "group": "1_refresh"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "s3x.search",
+          "when": "config.s3x.endpointUrl != ''"
+        },
+        {
+          "command": "s3x.configure"
+        },
+        {
+          "command": "s3x.configureWizard"
+        },
+        {
+          "command": "s3x.refresh",
+          "when": "config.s3x.endpointUrl != ''"
+        },
+        {
+          "command": "s3x.smokeTest",
+          "when": "config.s3x.endpointUrl != ''"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "test:unit": "npm run compile && mocha --ui tdd out/test/suite/utils-only.test.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "@vscode/test-electron": "^2.5.2",
+    "audit-ci": "^6.6.1",
+    "eslint": "^8.28.0",
+    "mocha": "^10.8.2",
+    "nyc": "^15.1.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.454.0",
+    "@aws-sdk/s3-request-presigner": "^3.454.0"
+  }
+}
