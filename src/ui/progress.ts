@@ -288,7 +288,7 @@ export function calculateFileProgress(
   transferred: number,
   total: number
 ): number {
-  if (total === 0) return 100;
+  if (total === 0) {return 100;}
   return Math.min(100, Math.round((transferred / total) * 100));
 }
 

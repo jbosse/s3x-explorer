@@ -5,27 +5,32 @@
     "@typescript-eslint"
   ],
   "extends": [
-    "@typescript-eslint/recommended"
+    "eslint:recommended"
   ],
   "rules": {
-    "@typescript-eslint/naming-convention": [
-      "warn",
-      {
-        "selector": "import",
-        "format": ["camelCase", "PascalCase"]
-      }
-    ],
-    "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/prefer-const": "warn",
     "curly": "warn",
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
-    "semi": "warn"
+    "semi": "warn",
+    "no-unused-vars": "off",
+    "no-undef": "off",
+    "no-useless-escape": "off",
+    "no-control-regex": "off"
   },
   "env": {
     "node": true,
-    "es6": true
+    "es6": true,
+    "mocha": true
+  },
+  "globals": {
+    "suite": "readonly",
+    "test": "readonly",
+    "suiteSetup": "readonly",
+    "suiteTeardown": "readonly",
+    "setup": "readonly",
+    "teardown": "readonly",
+    "NodeJS": "readonly",
+    "Thenable": "readonly"
   },
   "parserOptions": {
     "ecmaVersion": 2020,

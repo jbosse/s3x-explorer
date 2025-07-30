@@ -357,7 +357,7 @@ export async function promptForConfigurationSetup(): Promise<boolean> {
   let endpoint: string | undefined = config.endpointUrl;
   if (!endpoint) {
     endpoint = await promptForEndpoint();
-    if (!endpoint) return false;
+    if (!endpoint) {return false;}
   }
 
   let credentials = {
@@ -366,7 +366,7 @@ export async function promptForConfigurationSetup(): Promise<boolean> {
   };
   if (!credentials.accessKeyId || !credentials.secretAccessKey) {
     const newCredentials = await promptForCredentials();
-    if (!newCredentials) return false;
+    if (!newCredentials) {return false;}
     credentials = newCredentials;
   }
 

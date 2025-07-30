@@ -128,7 +128,7 @@ export async function deleteObjects(
   bucket: string,
   keys: string[]
 ): Promise<void> {
-  if (keys.length === 0) return;
+  if (keys.length === 0) {return;}
 
   return withRetry(async () => {
     const client = getS3Client();
