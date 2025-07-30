@@ -4,6 +4,7 @@
   "description": "Browse and manage S3-compatible storage (Cloudflare R2, AWS S3, MinIO) directly in VS Code",
   "version": "1.0.0",
   "publisher": "lvdn",
+  "license": "MIT",
   "icon": "logo.png",
   "repository": {
     "type": "git",
