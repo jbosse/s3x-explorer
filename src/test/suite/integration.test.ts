@@ -51,7 +51,9 @@ suite("R2 Integration Tests", () => {
     this.timeout(30000);
     teardownTestEnvironment();
 
-    if (!testBucketName) {return;}
+    if (!testBucketName) {
+      return;
+    }
 
     try {
       // Clean up any test objects that might have been left behind
@@ -72,7 +74,9 @@ suite("R2 Integration Tests", () => {
   test("testConnection should connect to R2 successfully", async function () {
     this.timeout(15000);
 
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) {
+      return;
+    }
 
     await testConnection();
     // If we get here without throwing, the test passed
@@ -82,7 +86,9 @@ suite("R2 Integration Tests", () => {
   test("listBuckets should return available buckets", async function () {
     this.timeout(10000);
 
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) {
+      return;
+    }
 
     const buckets = await listBuckets();
     assert.ok(Array.isArray(buckets), "Should return an array of buckets");
@@ -96,7 +102,9 @@ suite("R2 Integration Tests", () => {
   test("CRUD operations should work with test objects", async function () {
     this.timeout(20000);
 
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) {
+      return;
+    }
 
     const testKey = generateTestObjectKey("s3x-test-crud");
     const testContent = `Test content created at ${new Date().toISOString()}\nThis is a test object for the S3/R2 Explorer extension.`;
@@ -153,7 +161,9 @@ suite("R2 Integration Tests", () => {
   test("folder operations should work", async function () {
     this.timeout(15000);
 
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) {
+      return;
+    }
 
     const folderPrefix = `s3x-test-folder-${Date.now()}/`;
     const testObjectKey = folderPrefix + "test-file.txt";
@@ -191,7 +201,9 @@ suite("R2 Integration Tests", () => {
   test("presigned URL generation should work", async function () {
     this.timeout(15000);
 
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) {
+      return;
+    }
 
     const testKey = generateTestObjectKey("s3x-test-presign");
     const testContent = "Content for presigned URL test";
@@ -232,7 +244,9 @@ suite("R2 Integration Tests", () => {
   test("cache should work correctly", async function () {
     this.timeout(10000);
 
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) {
+      return;
+    }
 
     // Clear cache first
     s3Cache.invalidateAll();
@@ -273,7 +287,9 @@ suite("R2 Integration Tests", () => {
   test("error handling should work correctly", async function () {
     this.timeout(10000);
 
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) {
+      return;
+    }
 
     // Test with non-existent object
     const nonExistentKey = "s3x-test-nonexistent-" + Date.now();
@@ -282,9 +298,31 @@ suite("R2 Integration Tests", () => {
       await getObject(testBucketName, nonExistentKey);
       assert.fail("Should throw error for non-existent object");
     } catch (error: any) {
+      // Log the actual error details for debugging
+      console.log("Error details:", {
+        message: error.message,
+        code: error.code,
+        statusCode: error.statusCode,
+        name: error.name,
+        stack: error.stack?.split("\n").slice(0, 3).join("\n"),
+      });
+
+      // Check if error message contains "not found" (case insensitive) or has appropriate error codes
+      const messageContainsNotFound =
+        error.message && error.message.toLowerCase().includes("not found");
+      const hasNoSuchKeyCode =
+        error.code === "NoSuchKey" || error.code === "NotFound";
+      const hasNotFoundName =
+        error.name === "NoSuchKey" || error.name === "NotFound";
+      const has404Status =
+        error.statusCode === 404 || error.$metadata?.httpStatusCode === 404;
+
       assert.ok(
-        error.message.includes("not found") || error.code === "NoSuchKey",
-        "Should throw appropriate error for non-existent object"
+        messageContainsNotFound ||
+          hasNoSuchKeyCode ||
+          hasNotFoundName ||
+          has404Status,
+        `Should throw appropriate error for non-existent object. Got: message="${error.message}", code="${error.code}", name="${error.name}", statusCode="${error.statusCode}"`
       );
     }
 

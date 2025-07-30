@@ -45,10 +45,17 @@ export async function getObject(
       const byteArray = await response.Body.transformToByteArray();
       return new Uint8Array(byteArray);
     } catch (error: any) {
-      if (error.code === "NoSuchKey") {
+      // Check for various "not found" error patterns
+      if (
+        error.code === "NoSuchKey" ||
+        error.code === "NotFound" ||
+        error.name === "NoSuchKey" ||
+        error.name === "NotFound" ||
+        error.$metadata?.httpStatusCode === 404
+      ) {
         throw new S3Error(
           `Object '${key}' not found in bucket '${bucket}'`,
-          error.code,
+          error.code || error.name || "NoSuchKey",
           error.$metadata?.httpStatusCode,
           false
         );
@@ -128,7 +135,9 @@ export async function deleteObjects(
   bucket: string,
   keys: string[]
 ): Promise<void> {
-  if (keys.length === 0) {return;}
+  if (keys.length === 0) {
+    return;
+  }
 
   return withRetry(async () => {
     const client = getS3Client();
@@ -221,10 +230,17 @@ export async function getObjectMetadata(
         metadata: response.Metadata,
       };
     } catch (error: any) {
-      if (error.code === "NoSuchKey") {
+      // Check for various "not found" error patterns
+      if (
+        error.code === "NoSuchKey" ||
+        error.code === "NotFound" ||
+        error.name === "NoSuchKey" ||
+        error.name === "NotFound" ||
+        error.$metadata?.httpStatusCode === 404
+      ) {
         throw new S3Error(
           `Object '${key}' not found in bucket '${bucket}'`,
-          error.code,
+          error.code || error.name || "NoSuchKey",
           error.$metadata?.httpStatusCode,
           false
         );
