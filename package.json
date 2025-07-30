@@ -3,7 +3,8 @@
   "displayName": "S3/R2 Explorer",
   "description": "Browse and manage S3-compatible storage (Cloudflare R2, AWS S3, MinIO) directly in VS Code",
   "version": "1.0.0",
-  "publisher": "larsniet",
+  "publisher": "lvdn",
+  "icon": "logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/larsniet/r2-bucket-extension.git"
@@ -294,7 +295,9 @@
     "test": "node ./out/test/runTest.js",
     "test:unit": "npm run compile && mocha --ui tdd out/test/suite/utils-only.test.js",
     "package": "npm run compile && vsce package",
-    "package:prerelease": "npm run compile && vsce package --pre-release"
+    "package:prerelease": "npm run compile && vsce package --pre-release",
+    "publish": "npm run compile && vsce publish --no-dependencies",
+    "publish:prerelease": "npm run compile && vsce publish --pre-release --no-dependencies"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
