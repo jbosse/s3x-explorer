@@ -102,7 +102,14 @@ function registerCommands(context: vscode.ExtensionContext) {
   // Core commands
   context.subscriptions.push(
     vscode.commands.registerCommand("s3x.refresh", async (node) => {
-      s3Explorer.refresh(node);
+      try {
+        s3Explorer.refresh(node);
+      } catch (error) {
+        console.error("Error during refresh:", error);
+        // If refresh fails, try a full refresh
+        s3Cache.invalidateAll();
+        s3Explorer.refresh();
+      }
     })
   );
 
@@ -215,6 +222,17 @@ function registerCommands(context: vscode.ExtensionContext) {
       await handleSmokeTest();
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("s3x.refreshAll", async () => {
+      // Force complete refresh - clear all caches and reload from scratch
+      console.log("Force refreshing all S3 data...");
+      s3Cache.invalidateAll();
+      clearClientCache();
+      s3Explorer.refresh();
+      showInformationMessage("S3/R2 Explorer refreshed completely");
+    })
+  );
 }
 
 // Command handlers
@@ -230,12 +248,16 @@ async function handleCreateFolder(node: any) {
       prefix = node.prefix;
     } else {
       const selectedBucket = await promptForBucket();
-      if (!selectedBucket) {return;}
+      if (!selectedBucket) {
+        return;
+      }
       bucket = selectedBucket;
     }
 
     const folderName = await promptForFolderName();
-    if (!folderName) {return;}
+    if (!folderName) {
+      return;
+    }
 
     const folderKey = joinPath(prefix, folderName);
 
@@ -276,7 +298,9 @@ async function handleUploadFile(node: any) {
       prefix = node.prefix;
     } else {
       const selectedBucket = await promptForBucket();
-      if (!selectedBucket) {return;}
+      if (!selectedBucket) {
+        return;
+      }
       bucket = selectedBucket;
     }
 
@@ -284,7 +308,9 @@ async function handleUploadFile(node: any) {
       title: "Select files to upload",
     });
 
-    if (!files || files.length === 0) {return;}
+    if (!files || files.length === 0) {
+      return;
+    }
 
     for (const file of files) {
       const fileName = getFileName(file.fsPath);
@@ -329,7 +355,9 @@ async function handleUploadFolder(node: any) {
       prefix = node.prefix;
     } else {
       const selectedBucket = await promptForBucket();
-      if (!selectedBucket) {return;}
+      if (!selectedBucket) {
+        return;
+      }
       bucket = selectedBucket;
     }
 
@@ -337,7 +365,9 @@ async function handleUploadFolder(node: any) {
       title: "Select folder to upload",
     });
 
-    if (!folders || folders.length === 0) {return;}
+    if (!folders || folders.length === 0) {
+      return;
+    }
 
     const folder = folders[0];
     showInformationMessage(
@@ -368,7 +398,9 @@ async function handleDownload(node: any) {
 
     const fileName = getFileName(node.key);
     const saveLocation = await showSaveDialog(fileName);
-    if (!saveLocation) {return;}
+    if (!saveLocation) {
+      return;
+    }
 
     await withDownloadProgress(async (progress) => {
       progress.report({ message: `Downloading ${fileName}...` });
@@ -402,7 +434,9 @@ async function handleDelete(node: any) {
         "Delete",
         getFileName(node.key)
       );
-      if (!confirmed) {return;}
+      if (!confirmed) {
+        return;
+      }
 
       await withDeleteProgress(async (progress) => {
         progress.report({ message: "Deleting object..." });
@@ -418,7 +452,9 @@ async function handleDelete(node: any) {
         "Delete",
         node.prefix
       );
-      if (!confirmed) {return;}
+      if (!confirmed) {
+        return;
+      }
 
       showInformationMessage(
         "Folder deletion functionality will be implemented with recursive deletion"
@@ -455,7 +491,9 @@ async function handleGeneratePresignedUrl(node: any) {
     }
 
     const expiresIn = await promptForPresignedUrlExpiry();
-    if (!expiresIn) {return;}
+    if (!expiresIn) {
+      return;
+    }
 
     const url = await generatePresignedUrl(node.bucket, node.key, {
       expiresIn,
@@ -479,10 +517,14 @@ async function handleGeneratePresignedUrl(node: any) {
 async function handleSearch() {
   try {
     const searchParams = await promptForSearchTerm();
-    if (!searchParams) {return;}
+    if (!searchParams) {
+      return;
+    }
 
     const bucket = await promptForBucket("Select bucket to search");
-    if (!bucket) {return;}
+    if (!bucket) {
+      return;
+    }
 
     await withProgress(
       {

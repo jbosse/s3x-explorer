@@ -83,6 +83,39 @@ export class S3Explorer
     } catch (error) {
       console.error("Error getting tree children:", error);
 
+      // Check if this is a "bucket doesn't exist" error
+      if (
+        error instanceof Error &&
+        (error.message.includes("does not exist") ||
+          error.message.includes("NoSuchBucket") ||
+          error.message.includes("The specified bucket does not exist"))
+      ) {
+        // Clear cache for this specific bucket if it's a bucket/prefix error
+        if (element && (isBucketNode(element) || isPrefixNode(element))) {
+          const bucketName = isBucketNode(element)
+            ? element.bucket
+            : element.bucket;
+          console.log(`Clearing cache for non-existent bucket: ${bucketName}`);
+          s3Cache.invalidate(bucketName);
+        }
+
+        // If this is a bucket node that doesn't exist, suggest refreshing the root
+        if (element && isBucketNode(element)) {
+          vscode.window
+            .showErrorMessage(
+              `Bucket "${element.bucket}" no longer exists. Would you like to refresh the bucket list?`,
+              "Refresh"
+            )
+            .then((selection) => {
+              if (selection === "Refresh") {
+                // Refresh from root to reload bucket list
+                this.refresh();
+              }
+            });
+          return [];
+        }
+      }
+
       if (S3Error.isAuthError(error)) {
         vscode.window
           .showErrorMessage(
