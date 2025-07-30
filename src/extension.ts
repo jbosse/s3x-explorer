@@ -44,7 +44,13 @@ import {
   showErrorMessage,
   showInformationMessage,
 } from "./ui/prompts";
-import { joinPath, getFileName } from "./util/paths";
+import {
+  joinPath,
+  getFileName,
+  isImageFile,
+  isVideoFile,
+  isAudioFile,
+} from "./util/paths";
 
 let s3Explorer: S3Explorer;
 let s3FileSystemProvider: S3FileSystemProvider;
@@ -199,6 +205,27 @@ function registerCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("s3x.showMetadata", async (node) => {
       await handleShowMetadata(node);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("s3x.previewMedia", async (node) => {
+      // Handle both direct calls with parameters and context menu calls with nodes
+      if (node && isObjectNode(node)) {
+        await handlePreviewMedia({
+          bucket: node.bucket,
+          key: node.key,
+          uri: node.resourceUri,
+        });
+      } else {
+        await handlePreviewMedia(node);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("s3x.openFile", async (node) => {
+      await handleOpenFile(node);
     })
   );
 
@@ -699,4 +726,276 @@ async function handleSmokeTest() {
       `❌ Smoke test failed: ${error instanceof Error ? error.message : error}`
     );
   }
+}
+
+async function handleOpenFile(node: any) {
+  try {
+    if (!isObjectNode(node)) {
+      showErrorMessage("Invalid object node");
+      return;
+    }
+
+    const { bucket, key } = node;
+
+    // Check if this is a media file
+    if (isImageFile(key) || isVideoFile(key) || isAudioFile(key)) {
+      // Auto-preview media files
+      await handlePreviewMedia({
+        bucket,
+        key,
+        uri: node.resourceUri,
+      });
+    } else {
+      // Open non-media files using the default VS Code behavior
+      // This will go through our file system provider
+      await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+    }
+  } catch (error) {
+    showErrorMessage(
+      `Failed to open file: ${error instanceof Error ? error.message : error}`
+    );
+  }
+}
+
+async function handlePreviewMedia(params: any) {
+  try {
+    const { bucket, key, uri } = params;
+
+    // Generate a presigned URL for the media file
+    const presignedUrl = await generatePresignedUrl(bucket, key, {
+      expiresIn: 3600, // 1 hour
+    });
+
+    // Create HTML content for the preview
+    const mediaType = isImageFile(key)
+      ? "image"
+      : isVideoFile(key)
+      ? "video"
+      : "audio";
+
+    let htmlContent: string;
+    if (mediaType === "image") {
+      htmlContent = createImagePreviewHtml(key, presignedUrl);
+    } else if (mediaType === "video") {
+      htmlContent = createVideoPreviewHtml(key, presignedUrl);
+    } else {
+      htmlContent = createAudioPreviewHtml(key, presignedUrl);
+    }
+
+    // Create and show webview
+    const panel = vscode.window.createWebviewPanel(
+      "s3xMediaPreview",
+      `Preview: ${getFileName(key)}`,
+      vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+      }
+    );
+
+    panel.webview.html = htmlContent;
+  } catch (error) {
+    showErrorMessage(
+      `Failed to preview media: ${
+        error instanceof Error ? error.message : error
+      }`
+    );
+  }
+}
+
+function createImagePreviewHtml(key: string, url: string): string {
+  const fileName = getFileName(key);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Preview: ${fileName}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            font-family: var(--vscode-font-family);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .filename {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 100%;
+            text-align: center;
+        }
+        .image {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+        }
+        .error {
+            color: var(--vscode-errorForeground);
+            padding: 20px;
+            border: 1px solid var(--vscode-errorBorder);
+            border-radius: 4px;
+            background-color: var(--vscode-inputValidation-errorBackground);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="filename">${fileName}</div>
+        <div>S3/R2 Object: ${key}</div>
+    </div>
+    <div class="container">
+        <img class="image" src="${url}" alt="${fileName}" 
+             onerror="this.style.display='none'; document.getElementById('error').style.display='block';" />
+        <div id="error" class="error" style="display:none;">
+            Failed to load image. The presigned URL may have expired or the file may be corrupted.
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+function createVideoPreviewHtml(key: string, url: string): string {
+  const fileName = getFileName(key);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Preview: ${fileName}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            font-family: var(--vscode-font-family);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .filename {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 100%;
+            text-align: center;
+        }
+        .video {
+            max-width: 100%;
+            max-height: 80vh;
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+        }
+        .error {
+            color: var(--vscode-errorForeground);
+            padding: 20px;
+            border: 1px solid var(--vscode-errorBorder);
+            border-radius: 4px;
+            background-color: var(--vscode-inputValidation-errorBackground);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="filename">${fileName}</div>
+        <div>S3/R2 Object: ${key}</div>
+    </div>
+    <div class="container">
+        <video class="video" controls preload="metadata"
+               onerror="this.style.display='none'; document.getElementById('error').style.display='block';">
+            <source src="${url}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div id="error" class="error" style="display:none;">
+            Failed to load video. The presigned URL may have expired or the video format may not be supported.
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+function createAudioPreviewHtml(key: string, url: string): string {
+  const fileName = getFileName(key);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Preview: ${fileName}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            font-family: var(--vscode-font-family);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .filename {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 100%;
+            text-align: center;
+        }
+        .audio {
+            width: 100%;
+            max-width: 600px;
+        }
+        .error {
+            color: var(--vscode-errorForeground);
+            padding: 20px;
+            border: 1px solid var(--vscode-errorBorder);
+            border-radius: 4px;
+            background-color: var(--vscode-inputValidation-errorBackground);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="filename">${fileName}</div>
+        <div>S3/R2 Object: ${key}</div>
+    </div>
+    <div class="container">
+        <audio class="audio" controls preload="metadata"
+               onerror="this.style.display='none'; document.getElementById('error').style.display='block';">
+            <source src="${url}" type="audio/mpeg">
+            Your browser does not support the audio tag.
+        </audio>
+        <div id="error" class="error" style="display:none;">
+            Failed to load audio. The presigned URL may have expired or the audio format may not be supported.
+        </div>
+    </div>
+</body>
+</html>`;
 }

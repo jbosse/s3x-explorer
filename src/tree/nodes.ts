@@ -11,6 +11,8 @@ import {
   getFileName,
   isTextFile,
   isImageFile,
+  isVideoFile,
+  isAudioFile,
 } from "../util/paths";
 
 export abstract class BaseTreeNode extends vscode.TreeItem implements TreeNode {
@@ -84,9 +86,9 @@ export class ObjectNode extends BaseTreeNode {
 
     // Set up command to open the object when clicked
     this.command = {
-      command: "vscode.open",
+      command: "s3x.openFile",
       title: "Open",
-      arguments: [this.resourceUri],
+      arguments: [this],
     };
 
     // Create tooltip with metadata

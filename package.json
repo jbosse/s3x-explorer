@@ -161,6 +161,16 @@
         "command": "s3x.refreshAll",
         "title": "S3: Force Refresh All",
         "icon": "$(sync)"
+      },
+      {
+        "command": "s3x.previewMedia",
+        "title": "Preview Media",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "s3x.openFile",
+        "title": "Open File",
+        "icon": "$(file)"
       }
     ],
     "menus": {
@@ -238,9 +248,14 @@
           "group": "5_url"
         },
         {
+          "command": "s3x.previewMedia",
+          "when": "view == s3xExplorer && viewItem == object",
+          "group": "6_info@1"
+        },
+        {
           "command": "s3x.showMetadata",
           "when": "view == s3xExplorer && viewItem == object",
-          "group": "6_info"
+          "group": "6_info@2"
         },
         {
           "command": "s3x.loadMore",
@@ -277,7 +292,9 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "test:unit": "npm run compile && mocha --ui tdd out/test/suite/utils-only.test.js"
+    "test:unit": "npm run compile && mocha --ui tdd out/test/suite/utils-only.test.js",
+    "package": "npm run compile && vsce package",
+    "package:prerelease": "npm run compile && vsce package --pre-release"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

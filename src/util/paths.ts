@@ -279,6 +279,48 @@ export function isImageFile(key: string): boolean {
 }
 
 /**
+ * Check if a key represents a video file based on its extension
+ */
+export function isVideoFile(key: string): boolean {
+  const videoExtensions = [
+    "mp4",
+    "avi",
+    "mov",
+    "wmv",
+    "flv",
+    "webm",
+    "mkv",
+    "m4v",
+    "3gp",
+    "ogv",
+    "mpeg",
+    "mpg",
+  ];
+
+  const extension = getFileExtension(key).toLowerCase();
+  return videoExtensions.includes(extension);
+}
+
+/**
+ * Check if a key represents an audio file based on its extension
+ */
+export function isAudioFile(key: string): boolean {
+  const audioExtensions = [
+    "mp3",
+    "wav",
+    "flac",
+    "aac",
+    "ogg",
+    "wma",
+    "m4a",
+    "opus",
+  ];
+
+  const extension = getFileExtension(key).toLowerCase();
+  return audioExtensions.includes(extension);
+}
+
+/**
  * Validate that a key is safe for S3
  */
 export function isValidS3Key(key: string): boolean {

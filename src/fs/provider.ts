@@ -6,7 +6,13 @@ import {
   getObjectMetadata,
 } from "../s3/ops";
 import { listObjects } from "../s3/listing";
-import { parseS3xUri, joinPath, isTextFile } from "../util/paths";
+import {
+  parseS3xUri,
+  joinPath,
+  isTextFile,
+  isImageFile,
+  isVideoFile,
+} from "../util/paths";
 import { getConfig } from "../s3/client";
 import { S3Error } from "../types";
 
@@ -178,8 +184,30 @@ export class S3FileSystemProvider implements vscode.FileSystemProvider {
         }
       }
 
-      // For non-text files, show a warning
-      if (!isTextFile(key)) {
+      // For media files, suggest using preview instead
+      if (isImageFile(key) || isVideoFile(key)) {
+        const choice = await vscode.window.showInformationMessage(
+          "This is a media file. Would you like to preview it or open as binary?",
+          "Preview",
+          "Open as Binary",
+          "Cancel"
+        );
+
+        if (choice === "Preview") {
+          // Trigger the preview command instead
+          vscode.commands.executeCommand("s3x.previewMedia", {
+            bucket,
+            key,
+            uri,
+          });
+          throw vscode.FileSystemError.FileNotFound(uri); // Prevent default opening
+        } else if (choice !== "Open as Binary") {
+          throw vscode.FileSystemError.FileNotFound(uri);
+        }
+      }
+
+      // For other non-text files, show a warning
+      if (!isTextFile(key) && !isImageFile(key) && !isVideoFile(key)) {
         const choice = await vscode.window.showWarningMessage(
           "This appears to be a binary file. Opening it may not display correctly.",
           "Open Anyway",
