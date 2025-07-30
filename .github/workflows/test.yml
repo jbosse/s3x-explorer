@@ -133,7 +133,7 @@ jobs:
     name: R2 Smoke Test
     runs-on: ubuntu-latest
     # Only run smoke test if we have credentials
-    if: ${{ secrets.S3X_ENDPOINT_URL }}
+    if: secrets.S3X_ENDPOINT_URL != ''
 
     steps:
       - name: Checkout code
@@ -178,7 +178,7 @@ jobs:
 
     steps:
       - name: Notify success
-        if: ${{ needs.test.result == 'success' && needs.security-scan.result == 'success' }}
+        if: needs.test.result == 'success' && needs.security-scan.result == 'success'
         run: |
           echo "✅ All tests passed successfully!"
           echo "- Unit tests: ✅ Passed"
@@ -192,7 +192,7 @@ jobs:
           fi
 
       - name: Notify failure
-        if: ${{ needs.test.result == 'failure' || needs.security-scan.result == 'failure' }}
+        if: needs.test.result == 'failure' || needs.security-scan.result == 'failure'
         run: |
           echo "❌ Some tests failed!"
           echo "- Unit tests: ${{ needs.test.result == 'success' && '✅' || '❌' }}"
