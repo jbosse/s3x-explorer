@@ -66,7 +66,6 @@ jobs:
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
       - name: Upload test results
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.os }}-node${{ matrix.node }}
@@ -132,8 +131,6 @@ jobs:
   smoke-test:
     name: R2 Smoke Test
     runs-on: ubuntu-latest
-    # Only run smoke test if we have credentials
-    if: secrets.S3X_ENDPOINT_URL != ''
 
     steps:
       - name: Checkout code
@@ -148,7 +145,19 @@ jobs:
       - name: Install dependencies
         run: npm install --force
 
+      - name: Check if credentials are available
+        id: check-creds
+        run: |
+          if [ -n "${{ secrets.S3X_ENDPOINT_URL }}" ] && [ -n "${{ secrets.S3X_ACCESS_KEY_ID }}" ]; then
+            echo "has-creds=true" >> $GITHUB_OUTPUT
+            echo "✅ R2 credentials are available"
+          else
+            echo "has-creds=false" >> $GITHUB_OUTPUT
+            echo "⚠️ R2 credentials not available, skipping smoke test"
+          fi
+
       - name: Setup Xvfb
+        if: steps.check-creds.outputs.has-creds == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb
@@ -156,6 +165,7 @@ jobs:
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
       - name: Compile and run smoke test
+        if: steps.check-creds.outputs.has-creds == 'true'
         run: |
           npm run compile
           timeout 300 npm test || echo "Test completed or timed out"
@@ -168,13 +178,17 @@ jobs:
           DISPLAY: ":99.0"
 
       - name: Report smoke test result
-        run: echo "Smoke test completed. Check logs for detailed results."
+        run: |
+          if [ "${{ steps.check-creds.outputs.has-creds }}" == "true" ]; then
+            echo "✅ Smoke test completed with R2 credentials"
+          else
+            echo "⚠️ Smoke test skipped - no R2 credentials available"
+          fi
 
   notify:
     name: Notify Results
     runs-on: ubuntu-latest
     needs: [test, security-scan, coverage, smoke-test]
-    if: always()
 
     steps:
       - name: Notify success
