@@ -4,12 +4,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      prerelease:
-        description: "Publish as pre-release"
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   publish:
@@ -62,28 +56,13 @@ jobs:
       - name: Package extension
         run: npm run package
 
-      - name: Publish to VS Code Marketplace (Release)
-        if: github.event_name == 'release' && !github.event.release.prerelease
+      - name: Publish to VS Code Marketplace
         run: vsce publish --no-dependencies
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-      - name: Publish to VS Code Marketplace (Pre-release)
-        if: (github.event_name == 'release' && github.event.release.prerelease) || (github.event_name == 'workflow_dispatch' && inputs.prerelease)
-        run: vsce publish --pre-release --no-dependencies
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-
-      - name: Publish to Open VSX (Release)
-        if: github.event_name == 'release' && !github.event.release.prerelease
+      - name: Publish to Open VSX
         run: ovsx publish --no-dependencies
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        continue-on-error: true
-
-      - name: Publish to Open VSX (Pre-release)
-        if: (github.event_name == 'release' && github.event.release.prerelease) || (github.event_name == 'workflow_dispatch' && inputs.prerelease)
-        run: ovsx publish --pre-release --no-dependencies
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         continue-on-error: true
