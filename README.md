@@ -225,7 +225,7 @@ https://<account-id>.<jurisdiction>.r2.cloudflarestorage.com
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/s3x-explorer
+git clone https://github.com/larsniet/s3x-explorer
 cd s3x-explorer
 
 # Install dependencies
@@ -338,9 +338,9 @@ Contributions welcome! Please read CONTRIBUTING.md for guidelines.
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/your-org/s3x-explorer/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/s3x-explorer/discussions)
-- **Documentation**: [Wiki](https://github.com/your-org/s3x-explorer/wiki)
+- **Issues**: [GitHub Issues](https://github.com/larsniet/s3x-explorer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/larsniet/s3x-explorer/discussions)
+- **Documentation**: [Wiki](https://github.com/larsniet/s3x-explorer/wiki)
 
 ---
 
