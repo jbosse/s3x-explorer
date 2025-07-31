@@ -40,8 +40,10 @@ jobs:
         env:
           CI: true
 
-      - name: Install vsce
-        run: npm install -g @vscode/vsce
+      - name: Install vsce and ovsx
+        run: |
+          npm install -g @vscode/vsce
+          npm install -g ovsx
 
       - name: Extract version from tag
         if: github.event_name == 'release'
@@ -71,6 +73,20 @@ jobs:
         run: vsce publish --pre-release --no-dependencies
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX (Release)
+        if: github.event_name == 'release' && !github.event.release.prerelease
+        run: ovsx publish --no-dependencies
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        continue-on-error: true
+
+      - name: Publish to Open VSX (Pre-release)
+        if: (github.event_name == 'release' && github.event.release.prerelease) || (github.event_name == 'workflow_dispatch' && inputs.prerelease)
+        run: ovsx publish --pre-release --no-dependencies
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        continue-on-error: true
 
       - name: Upload VSIX as artifact
         uses: actions/upload-artifact@v4

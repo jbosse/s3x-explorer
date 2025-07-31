@@ -8,7 +8,11 @@
   "icon": "logo.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/larsniet/r2-bucket-extension.git"
+    "url": "https://github.com/larsniet/s3x-explorer.git"
+  },
+  "homepage": "https://github.com/larsniet/s3x-explorer#readme",
+  "bugs": {
+    "url": "https://github.com/larsniet/s3x-explorer/issues"
   },
   "engines": {
     "vscode": "^1.75.0"
