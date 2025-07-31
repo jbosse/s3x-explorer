@@ -5,6 +5,8 @@ out/
 dist/
 *.js
 *.js.map
+# But include build scripts
+!esbuild.js
 !.eslintrc.js
 !webpack.config.js
 
