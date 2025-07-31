@@ -2,7 +2,7 @@
   "name": "s3x-explorer",
   "displayName": "S3/R2 Explorer",
   "description": "Browse and manage S3-compatible storage (Cloudflare R2, AWS S3, MinIO) directly in VS Code",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publisher": "lvdn",
   "license": "MIT",
   "icon": "logo.png",
