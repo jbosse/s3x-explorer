@@ -1,7 +1,23 @@
 const esbuild = require("esbuild");
+const fs = require("fs");
+const path = require("path");
 
 const production = process.argv.includes("--production");
 const watch = process.argv.includes("--watch");
+
+// Function to find all TypeScript files
+function findTSFiles(dir, fileList = []) {
+  const files = fs.readdirSync(dir);
+  files.forEach((file) => {
+    const filePath = path.join(dir, file);
+    if (fs.statSync(filePath).isDirectory()) {
+      findTSFiles(filePath, fileList);
+    } else if (file.endsWith(".ts")) {
+      fileList.push(filePath);
+    }
+  });
+  return fileList;
+}
 
 /**
  * @type {import('esbuild').Plugin}
@@ -26,22 +42,44 @@ const esbuildProblemMatcherPlugin = {
 };
 
 async function main() {
-  const ctx = await esbuild.context({
-    entryPoints: ["src/extension.ts"],
-    bundle: true,
+  const sourcemap = process.argv.includes("--sourcemap");
+
+  // If sourcemap is enabled (dev/test mode) and not production, compile all TypeScript files
+  // Otherwise, just compile the main extension
+  const entryPoints =
+    sourcemap && !production ? findTSFiles("src") : ["src/extension.ts"];
+
+  const bundle = entryPoints.length === 1; // Only bundle for single entry point
+
+  const buildConfig = {
+    entryPoints,
+    bundle,
     format: "cjs",
     minify: production,
-    sourcemap: !production,
+    sourcemap: sourcemap,
     sourcesContent: false,
     platform: "node",
-    outfile: "out/extension.js",
-    external: ["vscode"],
     logLevel: "silent",
     plugins: [
       /* add to the end of plugins array */
       esbuildProblemMatcherPlugin,
     ],
-  });
+  };
+
+  // Only set external when bundling
+  if (bundle) {
+    buildConfig.external = ["vscode"];
+  }
+
+  // Use outfile for single entry, outdir for multiple entries
+  if (entryPoints.length === 1) {
+    buildConfig.outfile = "out/extension.js";
+  } else {
+    buildConfig.outdir = "out";
+    buildConfig.preserveSymlinks = true;
+  }
+
+  const ctx = await esbuild.context(buildConfig);
   if (watch) {
     await ctx.watch();
   } else {
