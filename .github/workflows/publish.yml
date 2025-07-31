@@ -20,13 +20,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
-        env:
-          NODE_OPTIONS: "--experimental-global-webcrypto --experimental-fetch"
 
       - name: Install dependencies
         run: npm ci
@@ -61,8 +59,6 @@ jobs:
 
       - name: Package extension
         run: npm run package
-        env:
-          NODE_OPTIONS: "--experimental-global-webcrypto --experimental-fetch"
 
       - name: Publish to VS Code Marketplace (Release)
         if: github.event_name == 'release' && !github.event.release.prerelease
