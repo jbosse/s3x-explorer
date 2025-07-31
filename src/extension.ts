@@ -1,3 +1,5 @@
+// Import polyfills first to ensure globals are available
+import "./polyfills";
 import * as vscode from "vscode";
 import { S3Explorer } from "./tree/explorer";
 import { S3FileSystemProvider } from "./fs/provider";
