@@ -42,7 +42,7 @@ suite("S3 Client Tests", () => {
       endpointUrl: "https://example.r2.cloudflarestorage.com",
       region: "us-east-1",
       accessKeyId: "test-access-key",
-      secretAccessKey: "test-secret-key", 
+      secretAccessKey: "test-secret-key",
       forcePathStyle: true,
       maxPreviewSizeBytes: 10485760
     };
@@ -68,10 +68,15 @@ suite("S3 Client Tests", () => {
     const invalidUrlConfig = { ...validConfig, endpointUrl: "not-a-url" };
     const urlErrors = validateConfig(invalidUrlConfig);
     assert.ok(urlErrors.some((err) => err.includes("valid HTTPS URL")));
+
+    // HTTP URL should not return error
+    const httpUrlConfig = { ...validConfig, endpointUrl: "http://localhost:4566" };
+    const validHttpErrors = validateConfig(validConfig);
+    assert.strictEqual(validHttpErrors.length, 0);
   });
 
   test("getS3Client creates client with correct configuration", () => {
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) { return; }
 
     const client = getS3Client();
     assert.ok(client, "S3 client should be created");
@@ -88,7 +93,7 @@ suite("S3 Client Tests", () => {
   test("testConnection validates R2 connectivity", async function () {
     this.timeout(10000); // Allow 10 seconds for network request
 
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) { return; }
 
     try {
       await testConnection();
@@ -105,7 +110,7 @@ suite("S3 Client Tests", () => {
   });
 
   test("clearClientCache clears cached client", () => {
-    if (skipIfNoCredentials()) {return;}
+    if (skipIfNoCredentials()) { return; }
 
     // Create client
     const client1 = getS3Client();

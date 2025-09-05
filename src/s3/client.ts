@@ -43,7 +43,7 @@ export function validateConfig(config: S3Config): string[] {
 function isValidUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "https:";
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
   } catch {
     return false;
   }
@@ -132,8 +132,7 @@ export async function testConnection(): Promise<void> {
 
     if (error.code === "NetworkingError" || error.code === "ENOTFOUND") {
       throw new S3Error(
-        `Cannot connect to endpoint: ${
-          getConfig().endpointUrl
+        `Cannot connect to endpoint: ${getConfig().endpointUrl
         }. Please verify the URL is correct.`,
         error.code,
         undefined,
